@@ -23,3 +23,21 @@ export const LoginSchema = z.object({
       message: "Please enter a valid password",
     }),
   });
+
+  export const ResetSchema = z.object({
+    email: z.string().email({ message: 'Invalid email address' }),
+  });
+  
+
+export const ResetPasswordSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters long"),
+});
+
+
+  export const NewPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters long."),
+  confirmPassword: z.string().min(6, "Confirm Password must be at least 6 characters long."),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords must match",
+  path: ["confirmPassword"],
+});

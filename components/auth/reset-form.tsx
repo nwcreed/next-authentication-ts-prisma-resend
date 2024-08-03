@@ -11,45 +11,52 @@ import {
 } from "@/components/ui/form";
 import CardWrapper from "./card-wrapper";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema } from "@/schemas";
+import { ResetSchema } from "@/schemas/index"; // Assurez-vous que le chemin est correct
 import { Input } from "@/components/ui/input";
-import { z } from "zod";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { FormError } from "./form-error";
-import { login } from "@/actions/login";
-import Link from "next/link";
+import { reset } from "@/actions/reset"; // Assurez-vous que le chemin est correct
+import { z } from "zod";
 
-const LoginForm = () => {
+const ResetForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
-  const form = useForm<z.infer<typeof LoginSchema>>({
-    resolver: zodResolver(LoginSchema),
+  const form = useForm<z.infer<typeof ResetSchema>>({
+    resolver: zodResolver(ResetSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof LoginSchema>) => {
+  const onSubmit = async (data: z.infer<typeof ResetSchema>) => {
     setLoading(true);
-    login(data).then((res) => {
-      if (res?.error) {
-        setError(res?.error);
-        setLoading(false);
-      } else {
-        setLoading(false);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await reset(data); // Appel de la fonction reset
+
+      if (response.error) {
+        setError(response.error);
+      } else if (response.success) {
+        setSuccessMessage(response.success);
       }
-    });
+    } catch (err) {
+      setError("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <CardWrapper
-      headerLabel="Log in to your account"
-      title="Login"
-      backButtonHref="/register"
-      backButtonLabel="Don't have an account? Register here."
+      headerLabel="choose your new password"
+      title="Reset Password"
+      backButtonHref="/sign-in"
+      backButtonLabel="Back to login"
       showSocial
     >
       <Form {...form}>
@@ -72,36 +79,16 @@ const LoginForm = () => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="******" type="password" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              size="sm"
-              variant="link"
-              asChild
-              className="px-0 font-normal"
-            >
-              <Link href="/reset">Forgot password?</Link>
-            </Button>
           </div>
           <FormError message={error} />
           <Button type="submit" className="w-full">
-            {loading ? "Loading..." : "Login"}
+            {loading ? "Loading..." : "Reset Password"}
           </Button>
+          {successMessage && <p className="text-green-500">{successMessage}</p>}
         </form>
       </Form>
     </CardWrapper>
   );
 };
 
-export default LoginForm;
+export default ResetForm;
